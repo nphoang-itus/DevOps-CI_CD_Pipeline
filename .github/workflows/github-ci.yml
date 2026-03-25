@@ -5,8 +5,10 @@ name: Practice CI/CD Pipeline
 # TODO-STEP 2: Define the Trigger Events
 # Uncomment the following lines to trigger the workflow on push and pull request events
 on:
- push:
- pull_request:
+  push:
+    paths:
+      - '**.py'  # Trigger on changes to Python files
+  pull_request:
 
 jobs:
   # Build job
@@ -24,6 +26,15 @@ jobs:
       with:
         python-version: '3.9'
 
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+
     # TODO-STEP 3b: Enter a name for your step to display on GitHub. For example: Install dependencies
     - name: Install dependencies
     # TODO-STEP 3c: Add commands to install dependencies
@@ -39,6 +50,9 @@ jobs:
     # NOTE: Make sure to use the Job Name used above in Line 14. 
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]  # Test against multiple Python versions 
     
     steps:
     - name: Checkout repository
@@ -47,7 +61,15 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     # TODO-STEP 4b: Add command to install dependencies
     - name: Install dependencies
